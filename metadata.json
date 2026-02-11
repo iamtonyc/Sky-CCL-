@@ -1,0 +1,5 @@
+{
+  "name": "Sky CCL V1",
+  "description": "An advanced visualization tool for tracking CCL (Centaline City Index) values. Upload your Excel data to generate interactive trend charts with date-range analysis.",
+  "requestFramePermissions": []
+}
