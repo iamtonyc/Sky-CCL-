@@ -50,6 +50,12 @@ const MonthlyTooltip = ({ active, payload, label }: any) => {
               <span className="font-mono font-bold">{data.ma10.toFixed(2)}</span>
             </p>
           )}
+          {data.ma34 !== undefined && (
+            <p className="flex justify-between gap-6 text-blue-600 font-medium">
+              <span>MA 34:</span>
+              <span className="font-mono font-bold">{data.ma34.toFixed(2)}</span>
+            </p>
+          )}
           <p className="text-[10px] text-slate-400 mt-2">
             Change: {((data.close - data.open) / data.open * 100).toFixed(2)}%
           </p>
@@ -93,22 +99,27 @@ const CCLMonthlyChart: React.FC<CCLMonthlyChartProps> = ({ data }) => {
       };
     }).sort((a, b) => a.month.localeCompare(b.month));
 
-    // Add Moving Average calculation (10-month)
+    // Add Moving Average calculation (10-month and 34-month)
     return monthlyData.map((d, i) => {
-      const windowSize = 10;
-      const start = Math.max(0, i - windowSize + 1);
-      const window = monthlyData.slice(start, i + 1);
-      const sum = window.reduce((acc, curr) => acc + curr.close, 0);
-      const ma10 = sum / window.length;
-      return { ...d, ma10 };
+      const ma10WindowSize = 10;
+      const ma10Start = Math.max(0, i - ma10WindowSize + 1);
+      const ma10Window = monthlyData.slice(ma10Start, i + 1);
+      const ma10 = ma10Window.reduce((acc, curr) => acc + curr.close, 0) / ma10Window.length;
+
+      const ma34WindowSize = 34;
+      const ma34Start = Math.max(0, i - ma34WindowSize + 1);
+      const ma34Window = monthlyData.slice(ma34Start, i + 1);
+      const ma34 = ma34Window.reduce((acc, curr) => acc + curr.close, 0) / ma34Window.length;
+
+      return { ...d, ma10, ma34 };
     });
   }, [data]);
 
   if (chartData.length === 0) return null;
 
   const latestData = chartData[chartData.length - 1];
-  const minVal = Math.min(...chartData.map(d => Math.min(d.low, d.ma10)));
-  const maxVal = Math.max(...chartData.map(d => Math.max(d.high, d.ma10)));
+  const minVal = Math.min(...chartData.map(d => Math.min(d.low, d.ma10, d.ma34)));
+  const maxVal = Math.max(...chartData.map(d => Math.max(d.high, d.ma10, d.ma34)));
   const padding = (maxVal - minVal) * 0.1 || 10;
 
   return (
@@ -116,7 +127,7 @@ const CCLMonthlyChart: React.FC<CCLMonthlyChartProps> = ({ data }) => {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Monthly CCL Performance</h2>
-          <p className="text-sm text-slate-500">Candlestick view with 10-Month Moving Average (Red)</p>
+          <p className="text-sm text-slate-500">Candlestick view with 10-MA (Red) and 34-MA (Blue)</p>
         </div>
         <div className="text-right flex items-center gap-6">
           <div>
@@ -129,6 +140,12 @@ const CCLMonthlyChart: React.FC<CCLMonthlyChartProps> = ({ data }) => {
             <p className="text-sm font-medium text-slate-400">10-MA</p>
             <p className="text-2xl font-bold text-red-600">
               {latestData.ma10.toFixed(2)}
+            </p>
+          </div>
+          <div className="pl-6 border-l border-slate-100">
+            <p className="text-sm font-medium text-slate-400">34-MA</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {latestData.ma34.toFixed(2)}
             </p>
           </div>
         </div>
@@ -175,6 +192,17 @@ const CCLMonthlyChart: React.FC<CCLMonthlyChartProps> = ({ data }) => {
               type="monotone" 
               dataKey="ma10" 
               stroke="#ef4444" 
+              strokeWidth={2}
+              dot={false}
+              animationDuration={1500}
+            />
+
+            {/* 34-Month Moving Average Line */}
+            <Line 
+              name="34-Month MA"
+              type="monotone" 
+              dataKey="ma34" 
+              stroke="#2563eb" 
               strokeWidth={2}
               dot={false}
               animationDuration={1500}
